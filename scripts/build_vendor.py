@@ -4,11 +4,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import lzma
 import shutil
 import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -116,9 +118,11 @@ def select_wheel(
 
 
 def vendor_dictionary() -> None:
+    print("[dict] Creating dictionary dependency...")
     DICT_DEPS.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as temp_dir:
         target_dir = Path(temp_dir) / "target"
+        print("[dict] Installing SudachiDict-full and SudachiPy...")
         subprocess.run(
             [
                 sys.executable,
@@ -134,12 +138,67 @@ def vendor_dictionary() -> None:
         )
         system_dic = find_system_dic(target_dir)
         archive_path = DICT_DEPS / f"sudachi_full_{DICT_VERSION}.tar.xz"
-        with tarfile.open(archive_path, "w:xz") as archive:
-            archive.add(
-                system_dic,
-                arcname=f"sudachi_full_{DICT_VERSION}/system.dic",
-                recursive=False,
-            )
+        file_size = system_dic.stat().st_size
+        print(f"[dict] Found system.dic ({file_size / 1024 / 1024:.2f} MB)")
+        print(f"[dict] Compressing with xz Ultra (preset=9, extreme)...")
+
+        start_time = time.time()
+        last_report = 0.0
+        progress_interval = 2.0
+
+        class ProgressFile:
+            def __init__(self, path: Path, total_size: int):
+                self._file = open(path, "rb")
+                self._total = total_size
+                self._read = 0
+
+            def read(self, size: int = -1) -> bytes:
+                nonlocal last_report
+                data = self._file.read(size)
+                if data:
+                    self._read += len(data)
+                    now = time.time()
+                    if now - last_report >= progress_interval or not data:
+                        pct = self._read / self._total * 100
+                        elapsed = now - start_time
+                        if self._read > 0:
+                            eta = elapsed / self._read * (self._total - self._read)
+                            speed = self._read / elapsed / 1024 / 1024
+                            print(
+                                f"[dict] Progress: {pct:.1f}% | "
+                                f"{self._read / 1024 / 1024:.2f}/{self._total / 1024 / 1024:.2f} MB | "
+                                f"{speed:.2f} MB/s | ETA: {eta:.0f}s"
+                            )
+                        last_report = now
+                return data
+
+            def close(self) -> None:
+                self._file.close()
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                self.close()
+
+            @property
+            def name(self) -> str:
+                return self._file.name
+
+        tarinfo = tarfile.TarInfo(name=f"sudachi_full_{DICT_VERSION}/system.dic")
+        tarinfo.size = file_size
+        tarinfo.mtime = int(system_dic.stat().st_mtime)
+
+        with tarfile.open(archive_path, "w:xz", preset=9 | lzma.PRESET_EXTREME, format=tarfile.PAX_FORMAT) as tar:
+            with ProgressFile(system_dic, file_size) as pf:
+                tar.addfile(tarinfo, pf)
+
+        archive_size = archive_path.stat().st_size
+        elapsed = time.time() - start_time
+        print(f"[dict] Archive created: {archive_path.name}")
+        print(f"[dict] Compressed size: {archive_size / 1024 / 1024:.2f} MB")
+        print(f"[dict] Compression ratio: {archive_size / file_size * 100:.1f}%")
+        print(f"[dict] Compression completed in {elapsed:.1f}s")
 
     system_dic_contents = read_archive_member(
         archive_path, f"sudachi_full_{DICT_VERSION}/system.dic"
