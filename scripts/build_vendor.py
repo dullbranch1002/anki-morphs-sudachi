@@ -21,7 +21,7 @@ DICT_VERSION = "20260428"
 PYPI_JSON = "https://pypi.org/pypi/{project}/{version}/json"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-PACKAGE_ROOT = REPO_ROOT / "ankimorphs_japanese_sudachi"
+PACKAGE_ROOT = REPO_ROOT / "ankimorphs-japanese-sudachi"
 SUDACHIPY_DEPS = PACKAGE_ROOT / "deps" / "sudachipy"
 DICT_DEPS = PACKAGE_ROOT / "deps" / "dict"
 

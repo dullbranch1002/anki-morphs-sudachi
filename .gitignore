@@ -3,5 +3,5 @@ __pycache__/
 *.pyo
 *.ankiaddon
 *.tar.xz
-ankimorphs_japanese_sudachi/deps/
-ankimorphs_japanese_sudachi/user_files/
+ankimorphs-japanese-sudachi/deps/
+ankimorphs-japanese-sudachi/user_files/

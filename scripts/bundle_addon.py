@@ -7,8 +7,8 @@ import sys
 import zipfile
 from pathlib import Path
 
-PACKAGE_DIR = Path(__file__).resolve().parents[1] / "ankimorphs_japanese_sudachi"
-OUTPUT_FILE = PACKAGE_DIR.parent / "ankimorphs_japanese_sudachi.ankiaddon"
+PACKAGE_DIR = Path(__file__).resolve().parents[1] / "ankimorphs-japanese-sudachi"
+OUTPUT_FILE = PACKAGE_DIR.parent / "ankimorphs-japanese-sudachi.ankiaddon"
 
 PYTHON_TAGS = ["cpython-312", "cpython-313", "cpython-314"]
 OS_ARCHES = ["linux-x86_64", "linux-aarch64", "windows-amd64", "macos-x86_64", "macos-arm64"]

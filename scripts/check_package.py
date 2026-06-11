@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-import sys
+import runpy
 import tempfile
 import zipfile
 from pathlib import Path
@@ -45,7 +45,7 @@ def main() -> None:
             "package contains runtime cache files",
         )
         require(
-            not all(name.startswith("ankimorphs_japanese_sudachi/") for name in names),
+            not all(name.startswith("ankimorphs-japanese-sudachi/") for name in names),
             "package contains an enclosing top-level folder",
         )
         for python_tag, os_arch in REQUIRED_TARGETS:
@@ -56,14 +56,10 @@ def main() -> None:
             )
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            staged_addon = Path(temp_dir) / "ankimorphs_japanese_sudachi"
+            staged_addon = Path(temp_dir) / "ankimorphs-japanese-sudachi"
             staged_addon.mkdir()
             addon.extractall(staged_addon)
-            sys.path.insert(0, temp_dir)
-            try:
-                __import__("ankimorphs_japanese_sudachi")
-            finally:
-                sys.path.remove(temp_dir)
+            runpy.run_path(str(staged_addon / "__init__.py"), run_name="__main__")
 
 
 def require(condition: bool, message: str) -> None:
