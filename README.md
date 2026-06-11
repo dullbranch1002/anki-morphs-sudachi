@@ -17,8 +17,6 @@ The extracted dictionary is treated as rebuildable cache.
 
 - Python 3.12 or later
 - `pip` (comes with most Python installations)
-- `zip` command (usually preinstalled on Linux/macOS; on Windows the script
-  falls back to Python's built-in zipfile module)
 
 ## Build
 
@@ -33,7 +31,7 @@ cd anki-morphs-sudachi
 python3 scripts/build_vendor.py
 
 # 3. Bundle everything into an .ankiaddon file
-./bundle_addon.sh
+python3 scripts/bundle_addon.py
 
 # 4. Verify the package is well-formed
 python3 scripts/check_package.py ankimorphs_japanese_sudachi.ankiaddon
@@ -44,7 +42,7 @@ selected SudachiPy wheels, materializes `SudachiDict-full`, writes
 `deps/dict/sudachi_full_20260428.tar.xz`, and records checksums plus expected
 dictionary paths in `deps/dict/manifest.json`.
 
-Step 3 (`bundle_addon.sh`) produces `ankimorphs_japanese_sudachi.ankiaddon`
+Step 3 (`bundle_addon.py`) produces `ankimorphs_japanese_sudachi.ankiaddon`
 in the repository root. This file is gitignored and must be rebuilt after any
 code change.
 
