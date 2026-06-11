@@ -3,6 +3,8 @@
 Companion add-on for [AnkiMorphs](https://github.com/mortii/anki-morphs)
 that provides the `AnkiMorphs: Japanese Sudachi` morphemizer.
 
+*Preface: For full transparency, this was basically entirely vibe coded using GPT 5.5 via OpenAI's Codex and a bit of Qwen 3.6 via OpenCode. You might find some oddities here and there!*
+
 End users should install the `.ankiaddon` file and restart Anki. They should
 not need to install pip packages, Rust, system Python packages, or Sudachi
 dictionaries manually.
