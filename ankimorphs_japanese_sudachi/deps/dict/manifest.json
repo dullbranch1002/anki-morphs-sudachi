@@ -1,0 +1,13 @@
+{
+  "archive": "sudachi_full_20260428.tar.xz",
+  "archive_sha256": "0cfae3db88819657a4847ca800509f27f149683b69a9974deca8e8d50a895f28",
+  "dictionary_version": "20260428",
+  "members": [
+    {
+      "path": "sudachi_full_20260428/system.dic",
+      "sha256": "2c993988aae44cbad92b395790c951aa2dad957c983a7d4c32944f6263e02593",
+      "size": 360056557
+    }
+  ],
+  "system_dic": "sudachi_full_20260428/system.dic"
+}
