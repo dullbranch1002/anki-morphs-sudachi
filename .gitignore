@@ -2,5 +2,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.ankiaddon
+*.tar.xz
 ankimorphs_japanese_sudachi/deps/dict/sudachi_full_20260428/
 ankimorphs_japanese_sudachi/user_files/
