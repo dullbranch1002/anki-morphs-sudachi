@@ -49,6 +49,18 @@ SUDACHI_EXAMPLES = [
         ],
         id="noun particle verb",
     ),
+    pytest.param(
+        "“ああ　そうなのかも”って",
+        [
+            ExpectedMorpheme("ああ", "ああ", "感動詞"),
+            ExpectedMorpheme("そう", "そう", "副詞"),
+            ExpectedMorpheme("だ", "な", "助動詞"),
+            ExpectedMorpheme("の", "の", "助詞", "準体助詞"),
+            ExpectedMorpheme("かも", "かも", "助詞", "副助詞"),
+            ExpectedMorpheme("って", "って", "助詞", "副助詞"),
+        ],
+        id="quoted sentence with full-width space",
+    ),
 ]
 
 

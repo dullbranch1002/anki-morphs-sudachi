@@ -27,10 +27,10 @@ From this repository root:
 git clone https://github.com/YOUR_USERNAME/anki-morphs-sudachi.git
 cd anki-morphs-sudachi
 
-# 2. Download SudachiPy wheels and build the SudachiDict-full archive
+# 2. Download SudachiPy wheels and materialize SudachiDict-full
 python3 scripts/build_vendor.py
 
-# 3. Bundle everything into an .ankiaddon file
+# 3. Compress the dictionary and bundle everything into an .ankiaddon file
 python3 scripts/bundle_addon.py
 
 # 4. Verify the package is well-formed
@@ -38,13 +38,14 @@ python3 scripts/check_package.py ankimorphs-japanese-sudachi.ankiaddon
 ```
 
 Step 2 (`build_vendor.py`) downloads official PyPI artifacts, extracts only the
-selected SudachiPy wheels, materializes `SudachiDict-full`, writes
-`deps/dict/sudachi_full_20260428.tar.xz`, and records checksums plus expected
+selected SudachiPy wheels, materializes `SudachiDict-full` at
+`deps/dict/sudachi_full_20260428/system.dic`, and records checksums plus expected
 dictionary paths in `deps/dict/manifest.json`.
 
-Step 3 (`bundle_addon.py`) produces `ankimorphs-japanese-sudachi.ankiaddon`
-in the repository root. This file is gitignored and must be rebuilt after any
-code change.
+Step 3 (`bundle_addon.py`) compresses the materialized dictionary into
+`deps/dict/sudachi_full_20260428.tar.xz` and produces
+`ankimorphs-japanese-sudachi.ankiaddon` in the repository root. This file is
+gitignored and must be rebuilt after any code change.
 
 Step 4 (`check_package.py`) validates that the `.ankiaddon` contains all
 required files for every supported platform and that the package imports

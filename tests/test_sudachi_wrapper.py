@@ -91,3 +91,35 @@ def test_get_morphemes_sudachi_filters_tokens_before_ankimorphs(
             sub_part_of_speech="普通名詞",
         ),
     ]
+
+
+def test_get_morphemes_sudachi_composes_kamo(
+    sudachi_wrapper: Any,
+    monkeypatch: Any,
+) -> None:
+    tokenizer = FakeTokenizer(
+        [
+            FakeToken(
+                surface="か",
+                dictionary_form="か",
+                part_of_speech=("助詞", "副助詞"),
+            ),
+            FakeToken(
+                surface="も",
+                dictionary_form="も",
+                part_of_speech=("助詞", "係助詞"),
+            ),
+        ]
+    )
+    monkeypatch.setattr(sudachi_wrapper, "_get_tokenizer", lambda: tokenizer)
+
+    morphemes = sudachi_wrapper.get_morphemes_sudachi("かも", Morpheme)
+
+    assert morphemes == [
+        Morpheme(
+            lemma="かも",
+            inflection="かも",
+            part_of_speech="助詞",
+            sub_part_of_speech="副助詞",
+        ),
+    ]

@@ -59,30 +59,65 @@ def get_morphemes_sudachi(expression: str, morpheme_class: Any) -> list[Any]:
     morphs = []
 
     for token in _get_tokenizer().tokenize(expression):
-        pos = token.part_of_speech()
-        part_of_speech = pos[0] if len(pos) > 0 else ""
-        sub_part_of_speech = pos[1] if len(pos) > 1 else ""
-
-        if part_of_speech in _POS_BLACKLIST:
+        morph = _get_morph_data(token)
+        if morph is None:
             continue
-        if sub_part_of_speech in _SUB_POS_BLACKLIST:
-            continue
+        _append_morph_data(morphs, morph)
 
-        lemma = token.dictionary_form().strip()
-        inflection = token.surface().strip()
-        if not lemma or lemma == "*":
-            lemma = inflection
-        if lemma and inflection:
-            morphs.append(
-                morpheme_class(
-                    lemma=lemma,
-                    inflection=inflection,
-                    part_of_speech=part_of_speech,
-                    sub_part_of_speech=sub_part_of_speech,
-                )
-            )
+    return [
+        morpheme_class(
+            lemma=lemma,
+            inflection=inflection,
+            part_of_speech=part_of_speech,
+            sub_part_of_speech=sub_part_of_speech,
+        )
+        for lemma, inflection, part_of_speech, sub_part_of_speech in morphs
+    ]
 
-    return morphs
+
+def _get_morph_data(token: Any) -> tuple[str, str, str, str] | None:
+    pos = token.part_of_speech()
+    part_of_speech = pos[0] if len(pos) > 0 else ""
+    sub_part_of_speech = pos[1] if len(pos) > 1 else ""
+
+    if part_of_speech in _POS_BLACKLIST:
+        return None
+    if sub_part_of_speech in _SUB_POS_BLACKLIST:
+        return None
+
+    lemma = token.dictionary_form().strip()
+    inflection = token.surface().strip()
+    if not lemma or lemma == "*":
+        lemma = inflection
+    if not lemma or not inflection:
+        return None
+
+    return lemma, inflection, part_of_speech, sub_part_of_speech
+
+
+def _append_morph_data(
+    morphs: list[tuple[str, str, str, str]],
+    morph: tuple[str, str, str, str],
+) -> None:
+    if morphs and _is_kamo_pair(morphs[-1], morph):
+        morphs[-1] = ("かも", "かも", "助詞", "副助詞")
+        return
+
+    morphs.append(morph)
+
+
+def _is_kamo_pair(
+    previous: tuple[str, str, str, str],
+    current: tuple[str, str, str, str],
+) -> bool:
+    return (
+        previous[0] == "か"
+        and previous[1] == "か"
+        and previous[2] == "助詞"
+        and current[0] == "も"
+        and current[1] == "も"
+        and current[2] == "助詞"
+    )
 
 
 @cache
@@ -121,9 +156,16 @@ def _get_os_arch() -> str:
 
 def _ensure_system_dic() -> Path:
     manifest = _get_dict_manifest()
-    system_dic = _DICT_CACHE_ROOT / manifest["system_dic"]
     expected_member = _get_expected_member(manifest)
 
+    source_system_dic = _DICT_ROOT / manifest["system_dic"]
+    if (
+        source_system_dic.exists()
+        and source_system_dic.stat().st_size == expected_member["size"]
+    ):
+        return source_system_dic
+
+    system_dic = _DICT_CACHE_ROOT / manifest["system_dic"]
     if system_dic.exists() and system_dic.stat().st_size == expected_member["size"]:
         return system_dic
 
