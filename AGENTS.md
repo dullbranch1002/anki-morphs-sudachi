@@ -137,6 +137,101 @@ Interpretation:
 - If a composed morph such as `かも` is newly emitted by a morphemizer, existing
   known rows for separate `か` and `も` do not imply `かも` is known.
 
+## Random Deck Parse Audit
+
+When given a deck name and a number of random cards to analyse, audit the
+AnkiMorphs parse quality for that sample. The goal is to find real parser or
+composition misses, add regression coverage for them, and intentionally leave
+the tests failing. Do not fix implementation code during this workflow.
+
+Use the default Test profile paths from the AnkiMorphs Verification section
+unless the user specifies another profile.
+
+1. Find the deck id.
+
+Plain SQLite does not load Anki's custom `unicase` collation, so avoid `WHERE`
+or `ORDER BY` on deck names. Print all deck rows and match the requested deck
+name manually:
+
+```sh
+sqlite3 -readonly "file:$ANKI_PROFILE/collection.anki2?immutable=1" \
+  "SELECT id, quote(name) FROM decks;"
+```
+
+2. Sample the requested number of random cards from that deck.
+
+The first note field is usually the sentence field for local test decks. Confirm
+field layout if the sampled text does not look like sentences.
+
+```sh
+sqlite3 -readonly "file:$ANKI_PROFILE/collection.anki2?immutable=1" \
+  "SELECT c.id AS card_id,
+          n.id AS note_id,
+          substr(n.flds, 1, instr(n.flds, char(31))-1) AS sentence
+   FROM cards c
+   JOIN notes n ON n.id = c.nid
+   WHERE c.did = DECK_ID
+   ORDER BY random()
+   LIMIT SAMPLE_COUNT;"
+```
+
+3. Pull AnkiMorphs' stored morphs for the sampled card ids.
+
+```sh
+sqlite3 -header -column "$ANKI_PROFILE/ankimorphs.db" \
+  "SELECT cmm.card_id, cmm.morph_lemma, cmm.morph_inflection
+   FROM Card_Morph_Map cmm
+   WHERE cmm.card_id IN (CARD_IDS)
+   ORDER BY cmm.card_id, cmm.morph_lemma, cmm.morph_inflection;"
+```
+
+4. Reproduce this repo's wrapper output for each sampled sentence.
+
+Use the "Sentence Morph Validation" reproduction command below, replacing the
+sentence each time. Compare wrapper output to the DB morphs. Speaker labels,
+known status, card tags, and AnkiMorphs filtering can explain why some wrapper
+tokens do not appear in the card's DB morph list.
+
+5. Inspect raw Sudachi tokenization for suspicious sentences.
+
+Use the raw Sudachi A/B/C command below. This distinguishes upstream Sudachi
+boundaries from wrapper filtering or composition behavior.
+
+6. Decide whether a sampled card reveals a misparse.
+
+Treat these as misparses worth regression coverage:
+
+- A useful fixed expression is fragmented into less useful morphs.
+- An elongated, quoted, punctuated, or whitespace-adjacent form breaks a morph
+  that is parsed well in a normalized nearby form.
+- Japanese content yields no morphs, or content words/particles/auxiliaries are
+  lost due to wrapper filtering.
+- The wrapper differs from raw Sudachi in a way that removes useful AnkiMorphs
+  units.
+
+Do not count these as misparses by themselves:
+
+- A morph is absent only because it is already known, manually known, or filtered
+  by AnkiMorphs status behavior.
+- The installed Anki add-on is stale or the AnkiMorphs DB has not been
+  recalculated since the repo code changed.
+- Raw Sudachi, this wrapper, and the DB all agree and the result is merely
+  surprising rather than harmful to AnkiMorphs.
+
+7. Add failing regression tests for each discovered misparse.
+
+- Put real sentence regressions in `tests/test_sudachi_parsing_examples.py`.
+- Put fake-token wrapper rule regressions in `tests/test_sudachi_wrapper.py`.
+- Set the expected morphs to the useful behavior AnkiMorphs should eventually
+  provide.
+- Run a focused pytest command to confirm the new test fails for the expected
+  reason.
+- Do not change parser code or make the new test pass.
+
+After adding a failing regression, continue auditing the remaining sampled
+cards. In the final response, list the sampled card ids/sentences at a high
+level, identify any failing tests added, and report the focused test result.
+
 ## Sentence Morph Validation
 
 When given a sentence plus the morphs shown in Anki, validate whether the morphs

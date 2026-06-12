@@ -123,3 +123,56 @@ def test_get_morphemes_sudachi_composes_kamo(
             sub_part_of_speech="副助詞",
         ),
     ]
+
+
+def test_get_morphemes_sudachi_composes_elongated_itterasshai_tail(
+    sudachi_wrapper: Any,
+    monkeypatch: Any,
+) -> None:
+    tokenizer = FakeTokenizer(
+        [
+            FakeToken(
+                surface="いっ",
+                dictionary_form="いく",
+                part_of_speech=("動詞", "非自立可能"),
+            ),
+            FakeToken(
+                surface="てらっ",
+                dictionary_form="てらっ",
+                part_of_speech=("副詞", "*"),
+            ),
+            FakeToken(
+                surface="しゃ",
+                dictionary_form="しゃ",
+                part_of_speech=("名詞", "普通名詞"),
+            ),
+            FakeToken(
+                surface="～",
+                dictionary_form="~",
+                part_of_speech=("助詞", "格助詞"),
+            ),
+            FakeToken(
+                surface="い",
+                dictionary_form="い",
+                part_of_speech=("助詞", "終助詞"),
+            ),
+        ]
+    )
+    monkeypatch.setattr(sudachi_wrapper, "_get_tokenizer", lambda: tokenizer)
+
+    morphemes = sudachi_wrapper.get_morphemes_sudachi("いってらっしゃ～い", Morpheme)
+
+    assert morphemes == [
+        Morpheme(
+            lemma="いく",
+            inflection="いっ",
+            part_of_speech="動詞",
+            sub_part_of_speech="非自立可能",
+        ),
+        Morpheme(
+            lemma="てらっしゃる",
+            inflection="てらっしゃ～い",
+            part_of_speech="助動詞",
+            sub_part_of_speech="*",
+        ),
+    ]

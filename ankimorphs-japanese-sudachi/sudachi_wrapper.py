@@ -103,6 +103,15 @@ def _append_morph_data(
         morphs[-1] = ("かも", "かも", "助詞", "副助詞")
         return
 
+    if len(morphs) >= 3 and _is_elongated_itterasshai_tail(
+        morphs[-3],
+        morphs[-2],
+        morphs[-1],
+        morph,
+    ):
+        morphs[-3:] = [("てらっしゃる", "てらっしゃ～い", "助動詞", "*")]
+        return
+
     morphs.append(morph)
 
 
@@ -116,6 +125,28 @@ def _is_kamo_pair(
         and previous[2] == "助詞"
         and current[0] == "も"
         and current[1] == "も"
+        and current[2] == "助詞"
+    )
+
+
+def _is_elongated_itterasshai_tail(
+    first: tuple[str, str, str, str],
+    second: tuple[str, str, str, str],
+    third: tuple[str, str, str, str],
+    current: tuple[str, str, str, str],
+) -> bool:
+    return (
+        first[0] == "てらっ"
+        and first[1] == "てらっ"
+        and first[2] == "副詞"
+        and second[0] == "しゃ"
+        and second[1] == "しゃ"
+        and second[2] == "名詞"
+        and third[0] == "~"
+        and third[1] == "～"
+        and third[2] == "助詞"
+        and current[0] == "い"
+        and current[1] == "い"
         and current[2] == "助詞"
     )
 

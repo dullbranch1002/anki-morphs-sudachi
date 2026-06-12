@@ -61,6 +61,15 @@ SUDACHI_EXAMPLES = [
         ],
         id="quoted sentence with full-width space",
     ),
+    pytest.param(
+        "いってらっしゃ～い…　ん？",
+        [
+            ExpectedMorpheme("いく", "いっ", "動詞"),
+            ExpectedMorpheme("てらっしゃる", "てらっしゃ～い", "助動詞"),
+            ExpectedMorpheme("ん", "ん", "感動詞"),
+        ],
+        id="wave dash elongated itterasshai",
+    ),
 ]
 
 
