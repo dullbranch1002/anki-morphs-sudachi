@@ -5,20 +5,26 @@
 When asked whether a morph was picked up by AnkiMorphs, is known, or was manually
 added, check the Anki profile data directly.
 
-Default local test profile:
+Default local test profile is under the current user's Anki data directory.
+Commands below assume:
 
-- Profile folder: `/home/jdoe/.local/share/Anki2/Test`
-- AnkiMorphs DB: `/home/jdoe/.local/share/Anki2/Test/ankimorphs.db`
-- Anki collection DB: `/home/jdoe/.local/share/Anki2/Test/collection.anki2`
-- Known morphs folder: `/home/jdoe/.local/share/Anki2/Test/known-morphs`
-- Profile settings: `/home/jdoe/.local/share/Anki2/Test/ankimorphs_profile_settings.json`
-- Installed AnkiMorphs add-on: `/home/jdoe/.local/share/Anki2/addons21/472573498`
+```sh
+ANKI_PROFILE="${ANKI_PROFILE:-$HOME/.local/share/Anki2/Test}"
+ANKI_ADDONS="${ANKI_ADDONS:-$HOME/.local/share/Anki2/addons21}"
+```
+
+- Profile folder: `$ANKI_PROFILE`
+- AnkiMorphs DB: `$ANKI_PROFILE/ankimorphs.db`
+- Anki collection DB: `$ANKI_PROFILE/collection.anki2`
+- Known morphs folder: `$ANKI_PROFILE/known-morphs`
+- Profile settings: `$ANKI_PROFILE/ankimorphs_profile_settings.json`
+- Installed AnkiMorphs add-on: `$ANKI_ADDONS/472573498`
 
 Anki may keep `collection.anki2` locked. For read-only collection checks, use
 SQLite immutable mode:
 
 ```sh
-sqlite3 -readonly 'file:/home/jdoe/.local/share/Anki2/Test/collection.anki2?immutable=1' '...'
+sqlite3 -readonly "file:$ANKI_PROFILE/collection.anki2?immutable=1" '...'
 ```
 
 AnkiMorphs DB schema currently has only these tables:
@@ -57,7 +63,7 @@ Checklist for a morph, replacing `かも` with the target:
    threshold:
 
 ```sh
-sqlite3 -header -column /home/jdoe/.local/share/Anki2/Test/ankimorphs.db \
+sqlite3 -header -column "$ANKI_PROFILE/ankimorphs.db" \
   "SELECT lemma, inflection, highest_lemma_learning_interval, highest_inflection_learning_interval
    FROM Morphs
    WHERE lemma = 'かも' OR inflection = 'かも'
@@ -67,7 +73,7 @@ sqlite3 -header -column /home/jdoe/.local/share/Anki2/Test/ankimorphs.db \
 2. Check whether it was seen today:
 
 ```sh
-sqlite3 -header -column /home/jdoe/.local/share/Anki2/Test/ankimorphs.db \
+sqlite3 -header -column "$ANKI_PROFILE/ankimorphs.db" \
   "SELECT lemma, inflection
    FROM Seen_Morphs
    WHERE lemma = 'かも' OR inflection = 'かも'
@@ -77,7 +83,7 @@ sqlite3 -header -column /home/jdoe/.local/share/Anki2/Test/ankimorphs.db \
 3. Check whether any cards contain it:
 
 ```sh
-sqlite3 -header -column /home/jdoe/.local/share/Anki2/Test/ankimorphs.db \
+sqlite3 -header -column "$ANKI_PROFILE/ankimorphs.db" \
   "SELECT cmm.card_id, cmm.morph_lemma, cmm.morph_inflection, c.tags
    FROM Card_Morph_Map cmm
    JOIN Cards c ON c.card_id = cmm.card_id
@@ -88,7 +94,7 @@ sqlite3 -header -column /home/jdoe/.local/share/Anki2/Test/ankimorphs.db \
 4. Check for manually-known tagged notes/cards:
 
 ```sh
-sqlite3 -readonly 'file:/home/jdoe/.local/share/Anki2/Test/collection.anki2?immutable=1' \
+sqlite3 -readonly "file:$ANKI_PROFILE/collection.anki2?immutable=1" \
   "SELECT COUNT(*)
    FROM notes
    WHERE tags LIKE '%_card-status::i+0-manually%';"
@@ -98,7 +104,7 @@ If there are tagged notes, join cards and then compare card IDs to
 `Card_Morph_Map`:
 
 ```sh
-sqlite3 -readonly 'file:/home/jdoe/.local/share/Anki2/Test/collection.anki2?immutable=1' \
+sqlite3 -readonly "file:$ANKI_PROFILE/collection.anki2?immutable=1" \
   "SELECT c.id AS card_id, n.id AS note_id, n.tags, n.flds
    FROM cards c
    JOIN notes n ON n.id = c.nid
@@ -111,14 +117,14 @@ possible; avoid substring-only conclusions because files may contain words like
 `かもね`.
 
 ```sh
-rg -n '^かも$|^かも,|,かも$' /home/jdoe/.local/share/Anki2/Test/known-morphs
+rg -n '^かも$|^かも,|,かも$' "$ANKI_PROFILE/known-morphs"
 ```
 
 6. Check settings that affect known status:
 
 ```sh
 rg -n '"interval_for_known_morphs"|"evaluate_morph_lemma"|"evaluate_morph_inflection"|"read_known_morphs_folder"|"tag_known_manually"' \
-  /home/jdoe/.local/share/Anki2/Test/ankimorphs_profile_settings.json
+  "$ANKI_PROFILE/ankimorphs_profile_settings.json"
 ```
 
 Interpretation:
