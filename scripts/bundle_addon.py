@@ -69,6 +69,13 @@ def main() -> None:
 
 
 def create_dictionary_archive() -> None:
+    if ARCHIVE_PATH.is_file():
+        print(f"[dict] Reusing existing archive: {ARCHIVE_PATH.relative_to(PACKAGE_DIR)}")
+        if not MANIFEST_PATH.is_file():
+            assert SYSTEM_DIC.is_file(), f"missing dictionary file: {SYSTEM_DIC}"
+            write_dictionary_manifest()
+        return
+
     assert SYSTEM_DIC.is_file(), f"missing dictionary file: {SYSTEM_DIC}"
 
     file_size = SYSTEM_DIC.stat().st_size
@@ -140,6 +147,11 @@ def create_dictionary_archive() -> None:
     print(f"[dict] Compression ratio: {archive_size / file_size * 100:.1f}%")
     print(f"[dict] Compression completed in {elapsed:.1f}s")
 
+    write_dictionary_manifest()
+
+
+def write_dictionary_manifest() -> None:
+    file_size = SYSTEM_DIC.stat().st_size
     manifest = {
         "dictionary_version": DICT_VERSION,
         "archive": ARCHIVE_PATH.name,
