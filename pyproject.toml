@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "sudachi: requires the vendored SudachiPy runtime and Sudachi dictionary",
+]

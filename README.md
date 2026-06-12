@@ -50,6 +50,34 @@ Step 4 (`check_package.py`) validates that the `.ankiaddon` contains all
 required files for every supported platform and that the package imports
 without errors.
 
+## Tests
+
+Install the development test dependency:
+
+```sh
+python3 -m pip install -r requirements-dev.txt
+```
+
+Run the test suite:
+
+```sh
+python3 -m pytest
+```
+
+The fast wrapper tests do not require SudachiPy or a dictionary. The real
+Sudachi parsing examples are marked with `sudachi` and skip until the vendored
+runtime has been built:
+
+```sh
+python3 scripts/build_vendor.py
+python3 -m pytest -m sudachi
+```
+
+Add more expected parser examples in
+`tests/test_sudachi_parsing_examples.py`. Those tests assert the morphemes
+after this add-on has filtered Sudachi tokens, which is the same boundary
+handed off to AnkiMorphs.
+
 ## Bundled Runtime
 
 - `SudachiPy==0.6.11`
