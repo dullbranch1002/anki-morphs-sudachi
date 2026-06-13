@@ -222,6 +222,9 @@ Do not count these as misparses by themselves:
 
 - Put real sentence regressions in `tests/test_sudachi_parsing_examples.py`.
 - Put fake-token wrapper rule regressions in `tests/test_sudachi_wrapper.py`.
+- Add a short comment next to every new regression test stating the source
+  sentence and why the observed output is a misparse. Do not include deck,
+  note, card, or other source metadata in the comment.
 - Set the expected morphs to the useful behavior AnkiMorphs should eventually
   provide.
 - Run a focused pytest command to confirm the new test fails for the expected

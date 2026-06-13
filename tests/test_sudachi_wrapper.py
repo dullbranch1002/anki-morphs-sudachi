@@ -93,6 +93,48 @@ def test_get_morphemes_sudachi_filters_tokens_before_ankimorphs(
     ]
 
 
+def test_get_morphemes_sudachi_strips_parenthetical_kana_readings(
+    sudachi_wrapper: Any,
+    monkeypatch: Any,
+) -> None:
+    # Source: ＳＥＲＮ(セルン)に
+    # Misparse: kana reading annotations like "(セルン)" currently pass through
+    # tokenization and create extra morphs instead of being stripped first.
+    tokenizer = FakeTokenizer(
+        [
+            FakeToken(
+                surface="ＳＥＲＮ",
+                dictionary_form="sern",
+                part_of_speech=("名詞", "普通名詞"),
+            ),
+            FakeToken(
+                surface="に",
+                dictionary_form="に",
+                part_of_speech=("助詞", "格助詞"),
+            ),
+        ]
+    )
+    monkeypatch.setattr(sudachi_wrapper, "_get_tokenizer", lambda: tokenizer)
+
+    morphemes = sudachi_wrapper.get_morphemes_sudachi("ＳＥＲＮ(セルン)に", Morpheme)
+
+    assert tokenizer.last_expression == "ＳＥＲＮに"
+    assert morphemes == [
+        Morpheme(
+            lemma="sern",
+            inflection="ＳＥＲＮ",
+            part_of_speech="名詞",
+            sub_part_of_speech="普通名詞",
+        ),
+        Morpheme(
+            lemma="に",
+            inflection="に",
+            part_of_speech="助詞",
+            sub_part_of_speech="格助詞",
+        ),
+    ]
+
+
 def test_get_morphemes_sudachi_composes_kamo(
     sudachi_wrapper: Any,
     monkeypatch: Any,

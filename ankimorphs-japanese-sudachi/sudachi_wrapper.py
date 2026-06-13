@@ -20,6 +20,9 @@ _SUB_POS_BLACKLIST = {
     "数詞",
 }
 _CONTROL_CHARS_RE = re.compile("[\x00-\x1f\x7f-\x9f]")
+_PARENTHETICAL_KANA_READING_RE = re.compile(
+    r"[(（][ぁ-ゖァ-ヺーｰﾞﾟ・･\s]+[)）]"
+)
 
 _SUDACHIPY_ROOT = ADDON_ROOT / "deps" / "sudachipy"
 _DICT_ROOT = ADDON_ROOT / "deps" / "dict"
@@ -55,7 +58,7 @@ def setup_sudachi() -> None:
 
 
 def get_morphemes_sudachi(expression: str, morpheme_class: Any) -> list[Any]:
-    expression = _CONTROL_CHARS_RE.sub("", expression)
+    expression = _normalize_expression(expression)
     morphs = []
 
     for token in _get_tokenizer().tokenize(expression):
@@ -73,6 +76,11 @@ def get_morphemes_sudachi(expression: str, morpheme_class: Any) -> list[Any]:
         )
         for lemma, inflection, part_of_speech, sub_part_of_speech in morphs
     ]
+
+
+def _normalize_expression(expression: str) -> str:
+    expression = _CONTROL_CHARS_RE.sub("", expression)
+    return _PARENTHETICAL_KANA_READING_RE.sub("", expression)
 
 
 def _get_morph_data(token: Any) -> tuple[str, str, str, str] | None:
@@ -99,6 +107,15 @@ def _append_morph_data(
     morphs: list[tuple[str, str, str, str]],
     morph: tuple[str, str, str, str],
 ) -> None:
+    if _is_ikuyo_proper_noun(morph):
+        morphs.extend(
+            [
+                ("いく", "いく", "動詞", "*"),
+                ("よ", "よ", "助詞", "終助詞"),
+            ]
+        )
+        return
+
     if morphs and _is_kamo_pair(morphs[-1], morph):
         morphs[-1] = ("かも", "かも", "助詞", "副助詞")
         return
@@ -113,6 +130,15 @@ def _append_morph_data(
         return
 
     morphs.append(morph)
+
+
+def _is_ikuyo_proper_noun(morph: tuple[str, str, str, str]) -> bool:
+    return (
+        morph[0] == "いくよ"
+        and morph[1] == "いくよ"
+        and morph[2] == "名詞"
+        and morph[3] == "固有名詞"
+    )
 
 
 def _is_kamo_pair(

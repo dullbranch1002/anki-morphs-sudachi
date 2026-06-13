@@ -62,6 +62,33 @@ SUDACHI_EXAMPLES = [
         id="quoted sentence with full-width space",
     ),
     pytest.param(
+        # Source: ほいじゃ　いくよ
+        # Misparse: in this context Sudachi treats "いくよ" as a proper-name
+        # noun, but the useful AnkiMorphs units are the verb "いく" plus "よ".
+        "ほいじゃ　いくよ",
+        [
+            ExpectedMorpheme("ほい", "ほい", "代名詞"),
+            ExpectedMorpheme("じゃ", "じゃ", "助詞"),
+            ExpectedMorpheme("いく", "いく", "動詞"),
+            ExpectedMorpheme("よ", "よ", "助詞"),
+        ],
+        id="kana iku yo after colloquial lead-in",
+    ),
+    pytest.param(
+        # Source: （岡部）ＳＥＲＮ(セルン)にハッキングだ
+        # Misparse: "(セルン)" is a kana reading annotation for "ＳＥＲＮ",
+        # not a separate morph that should be learned from the sentence.
+        "（岡部）ＳＥＲＮ(セルン)にハッキングだ",
+        [
+            ExpectedMorpheme("岡部", "岡部", "名詞"),
+            ExpectedMorpheme("sern", "ＳＥＲＮ", "名詞"),
+            ExpectedMorpheme("に", "に", "助詞"),
+            ExpectedMorpheme("ハッキング", "ハッキング", "名詞"),
+            ExpectedMorpheme("だ", "だ", "助動詞"),
+        ],
+        id="parenthetical kana reading annotation",
+    ),
+    pytest.param(
         "いってらっしゃ～い…　ん？",
         [
             ExpectedMorpheme("いく", "いっ", "動詞"),
